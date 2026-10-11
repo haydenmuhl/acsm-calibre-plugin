@@ -4,8 +4,10 @@
 # This file is part of the ACSM Input Plugin by Leseratte10
 # ACSM Input Plugin for Calibre / acsm-calibre-plugin
 #
-# For more information, see: 
+# For more information, see:
 # https://github.com/Leseratte10/acsm-calibre-plugin
+
+set -eux
 
 sed_i() {
     # Added by @vasi in PR #88 because MacOS and FreeBSD don't support "sed -i".
@@ -21,20 +23,23 @@ sed_i() {
 [ ! -f calibre-plugin/asn1crypto.zip ] && ./package_modules.sh
 [ ! -f calibre-plugin/oscrypto.zip ] && ./package_modules.sh
 
+
 rm -rf calibre-plugin-tmp || /bin/true
+
 
 cp -r calibre-plugin calibre-plugin-tmp
 
 pushd calibre-plugin-tmp
+
 pushd keyextract
 
-# Compile C programs: 
+# Compile C programs:
 make
 
-base64 decrypt_win32.exe > decrypt_win32_b64.txt
-base64 decrypt_win64.exe > decrypt_win64_b64.txt
+base64 -i decrypt_win32.exe -o decrypt_win32_b64.txt
+base64 -i decrypt_win64.exe -o decrypt_win64_b64.txt
 
-# Base64-encode binaries and place them inside decryptor.py: 
+# Base64-encode binaries and place them inside decryptor.py:
 sed_i "/@@@CALIBRE_DECRYPTOR_WIN32_B64@@@/ {
     r decrypt_win32_b64.txt
     d
@@ -51,8 +56,8 @@ rm decrypt_win32.exe decrypt_win64.exe
 popd
 
 # Delete cache
-rm -r __pycache__
-rm *.pyc
+rm -rf __pycache__
+rm -f *.pyc
 
 # Set module ID. This needs to be changed if any of the module ZIPs change.
 echo -n "2023-12-19-01" > module_id.txt
@@ -61,11 +66,15 @@ echo -n "2023-12-19-01" > module_id.txt
 cp ../LICENSE LICENSE
 cp ../README.md README.md
 
-shopt -s globstar
+#shopt -s expand_aliases
 echo "Injecting Python2 compat code ..."
-for file in **/*.py;
+
+#shopt
+
+#pwd
+for file in *.py;
 do
-    #echo $file
+    echo $file
     # Inject Python2 compat code:
     sed_i '/#@@CALIBRE_COMPAT_CODE@@/ {
         r __calibre_compat_code.py
